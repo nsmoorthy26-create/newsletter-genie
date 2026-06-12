@@ -1,0 +1,175 @@
+import { iconMap, themes, type Newsletter, type Section, type ThemeKey } from "@/lib/newsletter-types";
+
+function Donut({ color }: { color: string }) {
+  return (
+    <svg viewBox="0 0 120 120" className="size-32">
+      <circle cx="60" cy="60" r="48" fill="none" stroke={color} strokeOpacity="0.15" strokeWidth="14" />
+      <circle cx="60" cy="60" r="48" fill="none" stroke={color} strokeWidth="14"
+        strokeDasharray={`${0.78 * 2 * Math.PI * 48} ${2 * Math.PI * 48}`}
+        strokeLinecap="round" transform="rotate(-90 60 60)" />
+    </svg>
+  );
+}
+
+function Bars({ color }: { color: string }) {
+  const vals = [40, 65, 50, 80, 55, 95];
+  return (
+    <svg viewBox="0 0 160 80" className="w-40 h-20">
+      {vals.map((v, i) => (
+        <rect key={i} x={i * 26 + 4} y={80 - v * 0.7} width="18" height={v * 0.7} rx="3" fill={color} opacity={0.4 + i * 0.1} />
+      ))}
+    </svg>
+  );
+}
+
+function SectionBlock({ s, theme }: { s: Section; theme: typeof themes[ThemeKey] }) {
+  const Icon = iconMap[s.icon] ?? iconMap.sparkles;
+
+  if (s.layout === "hero") {
+    return (
+      <header className={`relative overflow-hidden rounded-3xl p-10 md:p-14 ${theme.card}`} style={{ backgroundImage: theme.pattern }}>
+        <div className="flex items-center gap-3 text-xs font-semibold tracking-[0.2em] uppercase" style={{ color: theme.accent }}>
+          <Icon className="size-4" /> {s.kicker}
+        </div>
+        <h2 className={`mt-4 text-4xl md:text-5xl font-bold leading-tight ${theme.text}`}>{s.title}</h2>
+        {s.body && <p className={`mt-4 max-w-2xl text-base md:text-lg ${theme.muted}`}>{s.body}</p>}
+        {s.items.length > 0 && (
+          <ul className="mt-8 grid sm:grid-cols-2 gap-3">
+            {s.items.map((it, i) => (
+              <li key={i} className={`flex items-start gap-3 rounded-xl p-3 ${theme.text}`} style={{ background: theme.accentSoft }}>
+                <span className="mt-1 size-2 rounded-full shrink-0" style={{ background: theme.accent }} />
+                <span className="text-sm font-medium">{it.label}</span>
+              </li>
+            ))}
+          </ul>
+        )}
+      </header>
+    );
+  }
+
+  if (s.layout === "stats") {
+    return (
+      <section className={`rounded-3xl p-8 ${theme.card} ${theme.text}`}>
+        <Kicker s={s} theme={theme} />
+        <div className="mt-6 grid md:grid-cols-[1fr_auto] gap-6 items-center">
+          <div>
+            <h3 className="text-2xl font-bold">{s.title}</h3>
+            {s.body && <p className={`mt-2 ${theme.muted}`}>{s.body}</p>}
+            <div className="mt-4 grid sm:grid-cols-2 gap-3">
+              {s.items.map((it, i) => (
+                <div key={i} className="rounded-xl border p-3" style={{ borderColor: theme.accentSoft }}>
+                  <div className="text-xs uppercase tracking-wider opacity-60">{it.label}</div>
+                  {it.value && <div className="text-xl font-bold" style={{ color: theme.accent }}>{it.value}</div>}
+                  {it.detail && <div className="text-sm mt-1">{it.detail}</div>}
+                </div>
+              ))}
+            </div>
+          </div>
+          <div className="flex flex-col items-center">
+            {s.stat ? (
+              <>
+                <Donut color={theme.accent} />
+                <div className="-mt-20 text-center pointer-events-none">
+                  <div className="text-3xl font-bold" style={{ color: theme.accent }}>{s.stat.number}</div>
+                </div>
+                <div className={`mt-12 text-xs uppercase tracking-wider ${theme.muted}`}>{s.stat.label}</div>
+              </>
+            ) : (
+              <Bars color={theme.accent} />
+            )}
+          </div>
+        </div>
+      </section>
+    );
+  }
+
+  if (s.layout === "checklist") {
+    return (
+      <section className={`rounded-3xl p-8 ${theme.card} ${theme.text}`}>
+        <Kicker s={s} theme={theme} />
+        <h3 className="mt-3 text-2xl font-bold">{s.title}</h3>
+        {s.body && <p className={`mt-2 ${theme.muted}`}>{s.body}</p>}
+        <ul className="mt-5 space-y-2">
+          {s.items.map((it, i) => (
+            <li key={i} className="flex items-start gap-3 rounded-lg p-3" style={{ background: theme.accentSoft }}>
+              <span className="mt-0.5 grid place-items-center size-6 rounded-full text-white text-xs font-bold" style={{ background: theme.accent }}>✓</span>
+              <div>
+                <div className="font-medium">{it.label}</div>
+                {it.detail && <div className={`text-sm ${theme.muted}`}>{it.detail}</div>}
+              </div>
+            </li>
+          ))}
+        </ul>
+      </section>
+    );
+  }
+
+  if (s.layout === "contact") {
+    return (
+      <section className={`rounded-3xl p-8 ${theme.text}`} style={{ background: `linear-gradient(135deg, ${theme.accent}, ${theme.accent}cc)` }}>
+        <div className="flex items-center gap-2 text-xs font-semibold tracking-[0.2em] uppercase text-white/80">
+          <Icon className="size-4" /> {s.kicker}
+        </div>
+        <h3 className="mt-3 text-2xl font-bold text-white">{s.title}</h3>
+        {s.body && <p className="mt-2 text-white/90">{s.body}</p>}
+        <div className="mt-5 grid sm:grid-cols-2 gap-3">
+          {s.items.map((it, i) => (
+            <div key={i} className="rounded-xl bg-white/15 backdrop-blur p-3 text-white">
+              <div className="text-xs uppercase tracking-wider opacity-80">{it.label}</div>
+              {it.value && <div className="font-semibold">{it.value}</div>}
+            </div>
+          ))}
+        </div>
+      </section>
+    );
+  }
+
+  // feature / list / quote default
+  return (
+    <section className={`rounded-3xl p-8 ${theme.card} ${theme.text}`}>
+      <Kicker s={s} theme={theme} />
+      <h3 className="mt-3 text-2xl font-bold">{s.title}</h3>
+      {s.body && <p className={`mt-2 ${theme.muted}`}>{s.body}</p>}
+      {s.items.length > 0 && (
+        <ul className={`mt-5 ${s.layout === "list" ? "grid sm:grid-cols-2 gap-3" : "space-y-2"}`}>
+          {s.items.map((it, i) => (
+            <li key={i} className="flex items-start gap-3 rounded-lg p-3" style={{ background: theme.accentSoft }}>
+              <span className="mt-1 size-2 rounded-full shrink-0" style={{ background: theme.accent }} />
+              <div>
+                <div className="font-medium">{it.label}</div>
+                {it.value && <div className="text-sm font-semibold" style={{ color: theme.accent }}>{it.value}</div>}
+                {it.detail && <div className={`text-sm ${theme.muted}`}>{it.detail}</div>}
+              </div>
+            </li>
+          ))}
+        </ul>
+      )}
+    </section>
+  );
+}
+
+function Kicker({ s, theme }: { s: Section; theme: typeof themes[ThemeKey] }) {
+  const Icon = iconMap[s.icon] ?? iconMap.sparkles;
+  return (
+    <div className="flex items-center gap-2 text-xs font-semibold tracking-[0.2em] uppercase" style={{ color: theme.accent }}>
+      <Icon className="size-4" /> {s.kicker}
+    </div>
+  );
+}
+
+export function NewsletterRenderer({ data, themeKey }: { data: Newsletter; themeKey: ThemeKey }) {
+  const theme = themes[themeKey];
+  return (
+    <div className={`min-h-full rounded-3xl p-6 md:p-10 ${theme.bg}`}>
+      <div className="mx-auto max-w-3xl space-y-6">
+        <div className={`flex items-center justify-between text-xs uppercase tracking-[0.25em] ${theme.muted}`}>
+          <span>{data.issue}</span>
+          <span>{data.subtitle}</span>
+        </div>
+        <h1 className={`text-3xl md:text-4xl font-black tracking-tight ${theme.text}`}>{data.title}</h1>
+        {data.sections.map((s) => <SectionBlock key={s.id} s={s} theme={theme} />)}
+        <footer className={`text-center text-xs ${theme.muted} pt-4`}>{data.footer}</footer>
+      </div>
+    </div>
+  );
+}
