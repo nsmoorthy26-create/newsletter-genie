@@ -42,7 +42,7 @@ const inputSchema = z.object({
   content: z.string().trim().min(1).max(30_000),
   theme: z.string().trim().min(1).max(80),
   design: z.enum(["Editorial", "Card Grid", "Briefing"]),
-  iconStyle: z.enum(["Smart", "Badged", "Minimal"]),
+  iconStyle: z.enum(["Smart", "Badged", "Minimal", "3D"]),
 });
 
 const itemSchema = z.object({
