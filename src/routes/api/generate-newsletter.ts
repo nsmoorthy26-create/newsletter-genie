@@ -56,24 +56,48 @@ const newsletterSchema = z.object({
   subtitle: z.string(),
   issue: z.string(),
   accentHex: z.string(),
-  sections: z.array(z.object({
-    id: z.string(),
-    title: z.string(),
-    kicker: z.string(),
-    icon: z.enum(["sparkles", "shield", "trending", "users", "leaf", "award", "rocket", "phone", "bank", "chart", "lock", "heart"]),
-    layout: z.enum(["hero", "feature", "stats", "checklist", "list", "quote", "contact"]),
-    body: z.string(),
-    items: z.array(itemSchema),
-    stat: z.object({ number: z.string(), label: z.string() }).optional(),
-  })).min(1).max(12),
+  sections: z
+    .array(
+      z.object({
+        id: z.string(),
+        title: z.string(),
+        kicker: z.string(),
+        icon: z.enum([
+          "sparkles",
+          "shield",
+          "trending",
+          "users",
+          "leaf",
+          "award",
+          "rocket",
+          "phone",
+          "bank",
+          "chart",
+          "lock",
+          "heart",
+        ]),
+        layout: z.enum(["hero", "feature", "stats", "checklist", "list", "quote", "contact"]),
+        body: z.string(),
+        items: z.array(itemSchema),
+        stat: z.object({ number: z.string(), label: z.string() }).optional(),
+      }),
+    )
+    .min(1)
+    .max(12),
   footer: z.string(),
 });
 
 function createLocalNewsletter(content: string) {
-  const blocks = content.split(/\n\s*\n/).map((block) => block.trim()).filter(Boolean);
+  const blocks = content
+    .split(/\n\s*\n/)
+    .map((block) => block.trim())
+    .filter(Boolean);
   const title = blocks[0]?.split("\n")[0] || "";
   const sections = blocks.slice(0, 9).map((block, index) => {
-    const lines = block.split("\n").map((line) => line.trim()).filter(Boolean);
+    const lines = block
+      .split("\n")
+      .map((line) => line.trim())
+      .filter(Boolean);
     const heading = index === 0 ? lines[1] || lines[0] || "" : lines[0] || "";
     const details = index === 0 ? lines.slice(2) : lines.slice(1);
     const isSecurity = /security|fraud|safe|password|otp/i.test(heading);
@@ -82,8 +106,18 @@ function createLocalNewsletter(content: string) {
       id: `section-${index + 1}`,
       title: heading,
       kicker: heading,
-      icon: (isSecurity ? "shield" : isContact ? "phone" : index === 0 ? "sparkles" : "trending") as "shield" | "phone" | "sparkles" | "trending",
-      layout: (index === 0 ? "hero" : isSecurity ? "checklist" : isContact ? "contact" : "list") as "hero" | "checklist" | "contact" | "list",
+      icon: (isSecurity
+        ? "shield"
+        : isContact
+          ? "phone"
+          : index === 0
+            ? "sparkles"
+            : "trending") as "shield" | "phone" | "sparkles" | "trending",
+      layout: (index === 0 ? "hero" : isSecurity ? "checklist" : isContact ? "contact" : "list") as
+        | "hero"
+        | "checklist"
+        | "contact"
+        | "list",
       body: details.length === 1 ? details[0] : "",
       items: (details.length === 1 ? [] : details).map((line) => {
         const [label, ...value] = line.split(":");
@@ -107,7 +141,8 @@ export const Route = createFileRoute("/api/generate-newsletter")({
     handlers: {
       POST: async ({ request }) => {
         const parsedInput = inputSchema.safeParse(await request.json());
-        if (!parsedInput.success) return new Response("Invalid newsletter content", { status: 400 });
+        if (!parsedInput.success)
+          return new Response("Invalid newsletter content", { status: 400 });
         const { content, theme, design, iconStyle } = parsedInput.data;
         const key = process.env.LOVABLE_API_KEY;
         if (!key) {
@@ -117,7 +152,11 @@ export const Route = createFileRoute("/api/generate-newsletter")({
         }
 
         try {
-          const { createLovableAiGatewayProvider, getLovableAiGatewayResponseHeaders, getLovableAiGatewayRunId } = await import("@/lib/ai-gateway.server");
+          const {
+            createLovableAiGatewayProvider,
+            getLovableAiGatewayResponseHeaders,
+            getLovableAiGatewayRunId,
+          } = await import("@/lib/ai-gateway.server");
           const gateway = createLovableAiGatewayProvider(key, getLovableAiGatewayRunId(request));
           const result = await generateText({
             model: gateway("google/gemini-3-flash-preview"),
@@ -129,11 +168,14 @@ export const Route = createFileRoute("/api/generate-newsletter")({
             headers: getLovableAiGatewayResponseHeaders(result.response.headers),
           });
         } catch (error) {
-          const status = typeof error === "object" && error !== null && "statusCode" in error
-            ? Number(error.statusCode)
-            : 500;
-          if (status === 429) return new Response("Rate limit reached. Please retry shortly.", { status });
-          if (status === 402) return new Response("AI credits exhausted. Add credits in your workspace.", { status });
+          const status =
+            typeof error === "object" && error !== null && "statusCode" in error
+              ? Number(error.statusCode)
+              : 500;
+          if (status === 429)
+            return new Response("Rate limit reached. Please retry shortly.", { status });
+          if (status === 402)
+            return new Response("AI credits exhausted. Add credits in your workspace.", { status });
           console.error("Newsletter generation failed", error);
           return new Response("AI generation failed. Please try again.", { status: 500 });
         }

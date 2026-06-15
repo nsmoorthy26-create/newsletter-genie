@@ -2,9 +2,27 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { Badge, LayoutGrid, Loader2, Minus, Newspaper, Printer, Rows3, Sparkles, WandSparkles } from "lucide-react";
+import {
+  Badge,
+  LayoutGrid,
+  Loader2,
+  Minus,
+  Newspaper,
+  Printer,
+  Rows3,
+  Sparkles,
+  WandSparkles,
+} from "lucide-react";
 import { NewsletterRenderer } from "@/components/NewsletterRenderer";
-import { designs, iconStyles, themes, type DesignKey, type IconStyle, type Newsletter, type ThemeKey } from "@/lib/newsletter-types";
+import {
+  designs,
+  iconStyles,
+  themes,
+  type DesignKey,
+  type IconStyle,
+  type Newsletter,
+  type ThemeKey,
+} from "@/lib/newsletter-types";
 
 const designIcons = { editorial: Newspaper, cards: LayoutGrid, compact: Rows3 };
 const styleIcons = { suggested: WandSparkles, badged: Badge, minimal: Minus };
@@ -13,7 +31,11 @@ export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
       { title: "Smart Newsletter Builder" },
-      { name: "description", content: "Paste your content. AI designs a beautiful newsletter with infographics and themes." },
+      {
+        name: "description",
+        content:
+          "Paste your content. AI designs a beautiful newsletter with infographics and themes.",
+      },
     ],
   }),
   component: Index,
@@ -45,7 +67,8 @@ function Index() {
       });
       if (!res.ok) {
         if (res.status === 429) throw new Error("Rate limit reached. Please retry shortly.");
-        if (res.status === 402) throw new Error("AI credits exhausted. Add credits in your workspace.");
+        if (res.status === 402)
+          throw new Error("AI credits exhausted. Add credits in your workspace.");
         throw new Error(await res.text());
       }
       const json = (await res.json()) as Newsletter;
@@ -83,7 +106,9 @@ function Index() {
         <aside className="space-y-4 print:hidden">
           <div className="rounded-2xl border bg-white p-5 shadow-sm">
             <label className="text-sm font-semibold">Newsletter content</label>
-            <p className="text-xs text-muted-foreground mb-2">Drop in raw text — headings, bullets, anything.</p>
+            <p className="text-xs text-muted-foreground mb-2">
+              Drop in raw text — headings, bullets, anything.
+            </p>
             <Textarea
               value={content}
               onChange={(e) => {
@@ -117,12 +142,23 @@ function Index() {
                           value={customColor}
                           aria-label="Choose custom newsletter color"
                           onClick={(event) => event.stopPropagation()}
-                          onChange={(event) => { setCustomColor(event.target.value); setThemeKey("custom"); }}
+                          onChange={(event) => {
+                            setCustomColor(event.target.value);
+                            setThemeKey("custom");
+                          }}
                           className="size-6 cursor-pointer rounded border-0 bg-transparent p-0"
                         />
-                      ) : <span className="size-4 rounded" style={{ background: t.accent }} />}
+                      ) : (
+                        <span className="size-4 rounded" style={{ background: t.accent }} />
+                      )}
                       <span className="size-4 rounded bg-white border" />
-                      <span className="size-4 rounded" style={{ background: k === "custom" ? customColor : t.accent, opacity: 0.4 }} />
+                      <span
+                        className="size-4 rounded"
+                        style={{
+                          background: k === "custom" ? customColor : t.accent,
+                          opacity: 0.4,
+                        }}
+                      />
                     </div>
                     <div className="text-xs font-semibold">{t.name}</div>
                   </Button>
@@ -133,12 +169,20 @@ function Index() {
 
           <div className="rounded-2xl border bg-white p-5 shadow-sm">
             <label className="text-sm font-semibold">Design</label>
-            <p className="mb-3 text-xs text-muted-foreground">Changes the newsletter composition.</p>
+            <p className="mb-3 text-xs text-muted-foreground">
+              Changes the newsletter composition.
+            </p>
             <div className="grid grid-cols-3 gap-2">
               {(Object.keys(designs) as DesignKey[]).map((key) => {
                 const Icon = designIcons[key];
                 return (
-                  <Button key={key} type="button" variant={design === key ? "default" : "outline"} onClick={() => setDesign(key)} className="h-auto flex-col gap-1.5 px-2 py-3">
+                  <Button
+                    key={key}
+                    type="button"
+                    variant={design === key ? "default" : "outline"}
+                    onClick={() => setDesign(key)}
+                    className="h-auto flex-col gap-1.5 px-2 py-3"
+                  >
                     <Icon className="size-4" />
                     <span className="text-xs">{designs[key].name}</span>
                   </Button>
@@ -149,12 +193,20 @@ function Index() {
 
           <div className="rounded-2xl border bg-white p-5 shadow-sm">
             <label className="text-sm font-semibold">Icon suggestion</label>
-            <p className="mb-3 text-xs text-muted-foreground">Choose how contextual icons are presented.</p>
+            <p className="mb-3 text-xs text-muted-foreground">
+              Choose how contextual icons are presented.
+            </p>
             <div className="grid grid-cols-3 gap-2">
               {(Object.keys(iconStyles) as IconStyle[]).map((key) => {
                 const Icon = styleIcons[key];
                 return (
-                  <Button key={key} type="button" variant={iconStyle === key ? "default" : "outline"} onClick={() => setIconStyle(key)} className="h-auto flex-col gap-1.5 px-2 py-3">
+                  <Button
+                    key={key}
+                    type="button"
+                    variant={iconStyle === key ? "default" : "outline"}
+                    onClick={() => setIconStyle(key)}
+                    className="h-auto flex-col gap-1.5 px-2 py-3"
+                  >
                     <Icon className="size-4" />
                     <span className="text-xs">{iconStyles[key].name}</span>
                   </Button>
@@ -163,24 +215,50 @@ function Index() {
             </div>
           </div>
 
-          <Button onClick={generate} disabled={loading || !content.trim()} className="w-full" size="lg">
-            {loading ? <><Loader2 className="size-4 animate-spin" /> Designing…</> : <><Sparkles className="size-4" /> Generate Newsletter</>}
+          <Button
+            onClick={generate}
+            disabled={loading || !content.trim()}
+            className="w-full"
+            size="lg"
+          >
+            {loading ? (
+              <>
+                <Loader2 className="size-4 animate-spin" /> Designing…
+              </>
+            ) : (
+              <>
+                <Sparkles className="size-4" /> Generate Newsletter
+              </>
+            )}
           </Button>
-          {error && <div className="text-sm text-red-600 rounded-lg bg-red-50 p-3 border border-red-200">{error}</div>}
+          {error && (
+            <div className="text-sm text-red-600 rounded-lg bg-red-50 p-3 border border-red-200">
+              {error}
+            </div>
+          )}
         </aside>
 
         <section className="min-h-[600px]">
           {data ? (
-            <NewsletterRenderer data={data} themeKey={themeKey} design={design} iconStyle={iconStyle} customColor={customColor} />
+            <NewsletterRenderer
+              data={data}
+              themeKey={themeKey}
+              design={design}
+              iconStyle={iconStyle}
+              customColor={customColor}
+            />
           ) : (
             <div className="h-full grid place-items-center rounded-3xl border-2 border-dashed bg-white/40 p-16 text-center">
               <div>
                 <div className="mx-auto grid place-items-center size-16 rounded-2xl bg-gradient-to-br from-indigo-500 to-fuchsia-500 text-white">
                   <Sparkles className="size-8" />
                 </div>
-                <h2 className="mt-4 text-xl font-bold">Your designed newsletter will appear here</h2>
+                <h2 className="mt-4 text-xl font-bold">
+                  Your designed newsletter will appear here
+                </h2>
                 <p className="mt-2 text-sm text-muted-foreground max-w-md">
-                  Paste your raw content on the left, choose a theme, and let AI design a polished layout with infographics.
+                  Paste your raw content on the left, choose a theme, and let AI design a polished
+                  layout with infographics.
                 </p>
               </div>
             </div>
