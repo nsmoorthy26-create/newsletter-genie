@@ -31,6 +31,20 @@ export const iconMap = {
 } satisfies Record<string, LucideIcon>;
 
 export type ThemeKey = "midnight" | "sunrise" | "forest" | "mono";
+export type DesignKey = "editorial" | "cards" | "compact";
+export type IconStyle = "suggested" | "badged" | "minimal";
+
+export const designs: Record<DesignKey, { name: string; description: string }> = {
+  editorial: { name: "Editorial", description: "Spacious magazine flow" },
+  cards: { name: "Card Grid", description: "Dynamic two-column layout" },
+  compact: { name: "Briefing", description: "Dense, scannable update" },
+};
+
+export const iconStyles: Record<IconStyle, { name: string; description: string }> = {
+  suggested: { name: "Smart", description: "AI picks contextual icons" },
+  badged: { name: "Badged", description: "Icons in accent badges" },
+  minimal: { name: "Minimal", description: "Subtle line icons" },
+};
 
 export const themes: Record<ThemeKey, { name: string; bg: string; card: string; text: string; muted: string; accent: string; accentSoft: string; ring: string; pattern: string }> = {
   midnight: {

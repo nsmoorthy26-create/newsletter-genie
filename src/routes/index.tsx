@@ -1,9 +1,12 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Loader2, Sparkles, Printer } from "lucide-react";
+import { Badge, LayoutGrid, Loader2, Minus, Newspaper, Printer, Rows3, Sparkles, WandSparkles } from "lucide-react";
 import { NewsletterRenderer } from "@/components/NewsletterRenderer";
-import { themes, type Newsletter, type ThemeKey } from "@/lib/newsletter-types";
+import { designs, iconStyles, themes, type DesignKey, type IconStyle, type Newsletter, type ThemeKey } from "@/lib/newsletter-types";
+
+const designIcons = { editorial: Newspaper, cards: LayoutGrid, compact: Rows3 };
+const styleIcons = { suggested: WandSparkles, badged: Badge, minimal: Minus };
 
 const SAMPLE = `Digital Banking Highlights
 Smarter Banking, Anytime Anywhere
@@ -52,6 +55,8 @@ export const Route = createFileRoute("/")({
 function Index() {
   const [content, setContent] = useState(SAMPLE);
   const [themeKey, setThemeKey] = useState<ThemeKey>("midnight");
+  const [design, setDesign] = useState<DesignKey>("editorial");
+  const [iconStyle, setIconStyle] = useState<IconStyle>("suggested");
   const [loading, setLoading] = useState(false);
   const [data, setData] = useState<Newsletter | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -63,7 +68,12 @@ function Index() {
       const res = await fetch("/api/generate-newsletter", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ content, theme: themes[themeKey].name }),
+        body: JSON.stringify({
+          content,
+          theme: themes[themeKey].name,
+          design: designs[design].name,
+          iconStyle: iconStyles[iconStyle].name,
+        }),
       });
       if (!res.ok) {
         if (res.status === 429) throw new Error("Rate limit reached. Please retry shortly.");
@@ -139,6 +149,38 @@ function Index() {
             </div>
           </div>
 
+          <div className="rounded-2xl border bg-white p-5 shadow-sm">
+            <label className="text-sm font-semibold">Design</label>
+            <p className="mb-3 text-xs text-muted-foreground">Changes the newsletter composition.</p>
+            <div className="grid grid-cols-3 gap-2">
+              {(Object.keys(designs) as DesignKey[]).map((key) => {
+                const Icon = designIcons[key];
+                return (
+                  <Button key={key} type="button" variant={design === key ? "default" : "outline"} onClick={() => setDesign(key)} className="h-auto flex-col gap-1.5 px-2 py-3">
+                    <Icon className="size-4" />
+                    <span className="text-xs">{designs[key].name}</span>
+                  </Button>
+                );
+              })}
+            </div>
+          </div>
+
+          <div className="rounded-2xl border bg-white p-5 shadow-sm">
+            <label className="text-sm font-semibold">Icon suggestion</label>
+            <p className="mb-3 text-xs text-muted-foreground">Choose how contextual icons are presented.</p>
+            <div className="grid grid-cols-3 gap-2">
+              {(Object.keys(iconStyles) as IconStyle[]).map((key) => {
+                const Icon = styleIcons[key];
+                return (
+                  <Button key={key} type="button" variant={iconStyle === key ? "default" : "outline"} onClick={() => setIconStyle(key)} className="h-auto flex-col gap-1.5 px-2 py-3">
+                    <Icon className="size-4" />
+                    <span className="text-xs">{iconStyles[key].name}</span>
+                  </Button>
+                );
+              })}
+            </div>
+          </div>
+
           <Button onClick={generate} disabled={loading || !content.trim()} className="w-full" size="lg">
             {loading ? <><Loader2 className="size-4 animate-spin" /> Designing…</> : <><Sparkles className="size-4" /> Generate Newsletter</>}
           </Button>
@@ -147,7 +189,7 @@ function Index() {
 
         <section className="min-h-[600px]">
           {data ? (
-            <NewsletterRenderer data={data} themeKey={themeKey} />
+            <NewsletterRenderer data={data} themeKey={themeKey} design={design} iconStyle={iconStyle} />
           ) : (
             <div className="h-full grid place-items-center rounded-3xl border-2 border-dashed bg-white/40 p-16 text-center">
               <div>

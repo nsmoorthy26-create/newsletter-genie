@@ -34,6 +34,8 @@ Guidelines:
 const inputSchema = z.object({
   content: z.string().trim().min(1).max(30_000),
   theme: z.string().trim().min(1).max(80),
+  design: z.enum(["Editorial", "Card Grid", "Briefing"]),
+  iconStyle: z.enum(["Smart", "Badged", "Minimal"]),
 });
 
 const itemSchema = z.object({
@@ -100,7 +102,7 @@ export const Route = createFileRoute("/api/generate-newsletter")({
       POST: async ({ request }) => {
         const parsedInput = inputSchema.safeParse(await request.json());
         if (!parsedInput.success) return new Response("Invalid newsletter content", { status: 400 });
-        const { content, theme } = parsedInput.data;
+        const { content, theme, design, iconStyle } = parsedInput.data;
         const key = process.env.LOVABLE_API_KEY;
         if (!key) {
           return Response.json(createLocalNewsletter(content), {
@@ -114,7 +116,7 @@ export const Route = createFileRoute("/api/generate-newsletter")({
           const result = await generateText({
             model: gateway("google/gemini-3-flash-preview"),
             system: SYSTEM,
-            prompt: `Theme preference: ${theme}\n\nRaw newsletter content:\n${content}`,
+            prompt: `Theme preference: ${theme}\nDesign preference: ${design}\nIcon treatment: ${iconStyle}. Select each section icon to match its meaning.\n\nRaw newsletter content:\n${content}`,
             output: Output.object({ schema: newsletterSchema }),
           });
           return Response.json(result.output, {
