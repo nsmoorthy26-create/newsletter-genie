@@ -173,7 +173,7 @@ function Index() {
             <p className="mb-3 text-xs text-muted-foreground">
               Changes the newsletter composition.
             </p>
-            <div className="grid grid-cols-2 gap-2">
+            <div className="grid grid-cols-3 gap-2">
               {(Object.keys(designs) as DesignKey[]).map((key) => {
                 const Icon = designIcons[key];
                 return (
@@ -197,7 +197,7 @@ function Index() {
             <p className="mb-3 text-xs text-muted-foreground">
               Choose how contextual icons are presented.
             </p>
-            <div className="grid grid-cols-3 gap-2">
+            <div className="grid grid-cols-2 gap-2">
               {(Object.keys(iconStyles) as IconStyle[]).map((key) => {
                 const Icon = styleIcons[key];
                 return (

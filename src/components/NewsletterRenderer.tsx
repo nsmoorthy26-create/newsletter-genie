@@ -62,6 +62,32 @@ function Bars({ color }: { color: string }) {
   );
 }
 
+function DimensionalIcon({
+  Icon,
+  theme,
+}: {
+  Icon: (typeof iconMap)[keyof typeof iconMap];
+  theme: (typeof themes)[ThemeKey];
+}) {
+  return (
+    <span className="relative mr-1 grid size-11 shrink-0 place-items-center [perspective:120px]">
+      <span
+        className="absolute inset-1 rotate-6 rounded-xl opacity-40 blur-[1px]"
+        style={{ background: theme.accent }}
+      />
+      <span
+        className="relative grid size-9 -rotate-3 place-items-center rounded-xl border border-white/40 transition-transform duration-300 hover:rotate-0 hover:-translate-y-0.5"
+        style={{
+          background: `linear-gradient(145deg, ${theme.accentSoft}, ${theme.accent})`,
+          boxShadow: `0 8px 16px -6px ${theme.accent}`,
+        }}
+      >
+        <Icon className="size-4 text-white drop-shadow-sm" strokeWidth={2.4} />
+      </span>
+    </span>
+  );
+}
+
 function SectionBlock({ s, theme, design, iconStyle }: SectionProps) {
   const Icon = iconMap[s.icon] ?? iconMap.sparkles;
   const frame =
@@ -70,6 +96,10 @@ function SectionBlock({ s, theme, design, iconStyle }: SectionProps) {
       : design === "cards"
         ? "rounded-2xl p-7 shadow-lg"
         : "rounded-3xl p-8";
+  const depth =
+    iconStyle === "dimensional"
+      ? "ring-1 ring-white/20 shadow-[0_18px_50px_-28px_rgba(15,23,42,0.5)]"
+      : "";
 
   if (s.layout === "hero") {
     return (
@@ -105,7 +135,7 @@ function SectionBlock({ s, theme, design, iconStyle }: SectionProps) {
 
   if (s.layout === "stats") {
     return (
-      <section className={`${frame} ${theme.card} ${theme.text}`}>
+      <section className={`${frame} ${depth} ${theme.card} ${theme.text}`}>
         <Kicker s={s} theme={theme} iconStyle={iconStyle} />
         <div className="mt-6 grid md:grid-cols-[1fr_auto] gap-6 items-center">
           <div>
@@ -153,7 +183,7 @@ function SectionBlock({ s, theme, design, iconStyle }: SectionProps) {
 
   if (s.layout === "checklist") {
     return (
-      <section className={`${frame} ${theme.card} ${theme.text}`}>
+      <section className={`${frame} ${depth} ${theme.card} ${theme.text}`}>
         <Kicker s={s} theme={theme} iconStyle={iconStyle} />
         <h3 className="mt-3 text-2xl font-bold">{s.title}</h3>
         {s.body && <p className={`mt-2 ${theme.muted}`}>{s.body}</p>}
@@ -188,9 +218,13 @@ function SectionBlock({ s, theme, design, iconStyle }: SectionProps) {
         style={{ background: `linear-gradient(135deg, ${theme.accent}, ${theme.accent}cc)` }}
       >
         <div className="flex items-center gap-2 text-xs font-semibold tracking-[0.2em] uppercase text-white/80">
-          <Icon
-            className={iconStyle === "badged" ? "size-7 rounded-lg bg-white/20 p-1.5" : "size-4"}
-          />{" "}
+          {iconStyle === "dimensional" ? (
+            <DimensionalIcon Icon={Icon} theme={theme} />
+          ) : (
+            <Icon
+              className={iconStyle === "badged" ? "size-7 rounded-lg bg-white/20 p-1.5" : "size-4"}
+            />
+          )}{" "}
           {s.kicker}
         </div>
         <h3 className="mt-3 text-2xl font-bold text-white">{s.title}</h3>
@@ -209,7 +243,7 @@ function SectionBlock({ s, theme, design, iconStyle }: SectionProps) {
 
   // feature / list / quote default
   return (
-    <section className={`${frame} ${theme.card} ${theme.text}`}>
+    <section className={`${frame} ${depth} ${theme.card} ${theme.text}`}>
       <Kicker s={s} theme={theme} iconStyle={iconStyle} />
       <h3 className="mt-3 text-2xl font-bold">{s.title}</h3>
       {s.body && <p className={`mt-2 ${theme.muted}`}>{s.body}</p>}
@@ -257,14 +291,18 @@ function Kicker({
       className="flex items-center gap-2 text-xs font-semibold tracking-[0.2em] uppercase"
       style={{ color: theme.accent }}
     >
-      <span
-        className={
-          iconStyle === "badged" ? "grid size-8 place-items-center rounded-lg" : "contents"
-        }
-        style={iconStyle === "badged" ? { background: theme.accentSoft } : undefined}
-      >
-        <Icon className={iconStyle === "minimal" ? "size-3.5 opacity-70" : "size-4"} />
-      </span>
+      {iconStyle === "dimensional" ? (
+        <DimensionalIcon Icon={Icon} theme={theme} />
+      ) : (
+        <span
+          className={
+            iconStyle === "badged" ? "grid size-8 place-items-center rounded-lg" : "contents"
+          }
+          style={iconStyle === "badged" ? { background: theme.accentSoft } : undefined}
+        >
+          <Icon className={iconStyle === "minimal" ? "size-3.5 opacity-70" : "size-4"} />
+        </span>
+      )}
       {s.kicker}
     </div>
   );
