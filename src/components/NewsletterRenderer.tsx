@@ -1,4 +1,11 @@
-import { iconMap, themes, type Newsletter, type Section, type ThemeKey } from "@/lib/newsletter-types";
+import { iconMap, themes, type DesignKey, type IconStyle, type Newsletter, type Section, type ThemeKey } from "@/lib/newsletter-types";
+
+type SectionProps = {
+  s: Section;
+  theme: typeof themes[ThemeKey];
+  design: DesignKey;
+  iconStyle: IconStyle;
+};
 
 function Donut({ color }: { color: string }) {
   return (
@@ -22,15 +29,14 @@ function Bars({ color }: { color: string }) {
   );
 }
 
-function SectionBlock({ s, theme }: { s: Section; theme: typeof themes[ThemeKey] }) {
+function SectionBlock({ s, theme, design, iconStyle }: SectionProps) {
   const Icon = iconMap[s.icon] ?? iconMap.sparkles;
+  const frame = design === "compact" ? "rounded-xl p-5" : design === "cards" ? "rounded-2xl p-7 shadow-lg" : "rounded-3xl p-8";
 
   if (s.layout === "hero") {
     return (
-      <header className={`relative overflow-hidden rounded-3xl p-10 md:p-14 ${theme.card}`} style={{ backgroundImage: theme.pattern }}>
-        <div className="flex items-center gap-3 text-xs font-semibold tracking-[0.2em] uppercase" style={{ color: theme.accent }}>
-          <Icon className="size-4" /> {s.kicker}
-        </div>
+      <header className={`relative overflow-hidden ${design === "compact" ? "rounded-xl p-7" : "rounded-3xl p-10 md:p-14"} ${theme.card}`} style={{ backgroundImage: theme.pattern }}>
+        <Kicker s={s} theme={theme} iconStyle={iconStyle} />
         <h2 className={`mt-4 text-4xl md:text-5xl font-bold leading-tight ${theme.text}`}>{s.title}</h2>
         {s.body && <p className={`mt-4 max-w-2xl text-base md:text-lg ${theme.muted}`}>{s.body}</p>}
         {s.items.length > 0 && (
@@ -49,8 +55,8 @@ function SectionBlock({ s, theme }: { s: Section; theme: typeof themes[ThemeKey]
 
   if (s.layout === "stats") {
     return (
-      <section className={`rounded-3xl p-8 ${theme.card} ${theme.text}`}>
-        <Kicker s={s} theme={theme} />
+      <section className={`${frame} ${theme.card} ${theme.text}`}>
+        <Kicker s={s} theme={theme} iconStyle={iconStyle} />
         <div className="mt-6 grid md:grid-cols-[1fr_auto] gap-6 items-center">
           <div>
             <h3 className="text-2xl font-bold">{s.title}</h3>
@@ -85,8 +91,8 @@ function SectionBlock({ s, theme }: { s: Section; theme: typeof themes[ThemeKey]
 
   if (s.layout === "checklist") {
     return (
-      <section className={`rounded-3xl p-8 ${theme.card} ${theme.text}`}>
-        <Kicker s={s} theme={theme} />
+      <section className={`${frame} ${theme.card} ${theme.text}`}>
+        <Kicker s={s} theme={theme} iconStyle={iconStyle} />
         <h3 className="mt-3 text-2xl font-bold">{s.title}</h3>
         {s.body && <p className={`mt-2 ${theme.muted}`}>{s.body}</p>}
         <ul className="mt-5 space-y-2">
@@ -108,7 +114,7 @@ function SectionBlock({ s, theme }: { s: Section; theme: typeof themes[ThemeKey]
     return (
       <section className={`rounded-3xl p-8 ${theme.text}`} style={{ background: `linear-gradient(135deg, ${theme.accent}, ${theme.accent}cc)` }}>
         <div className="flex items-center gap-2 text-xs font-semibold tracking-[0.2em] uppercase text-white/80">
-          <Icon className="size-4" /> {s.kicker}
+          <Icon className={iconStyle === "badged" ? "size-7 rounded-lg bg-white/20 p-1.5" : "size-4"} /> {s.kicker}
         </div>
         <h3 className="mt-3 text-2xl font-bold text-white">{s.title}</h3>
         {s.body && <p className="mt-2 text-white/90">{s.body}</p>}
@@ -126,8 +132,8 @@ function SectionBlock({ s, theme }: { s: Section; theme: typeof themes[ThemeKey]
 
   // feature / list / quote default
   return (
-    <section className={`rounded-3xl p-8 ${theme.card} ${theme.text}`}>
-      <Kicker s={s} theme={theme} />
+    <section className={`${frame} ${theme.card} ${theme.text}`}>
+      <Kicker s={s} theme={theme} iconStyle={iconStyle} />
       <h3 className="mt-3 text-2xl font-bold">{s.title}</h3>
       {s.body && <p className={`mt-2 ${theme.muted}`}>{s.body}</p>}
       {s.items.length > 0 && (
@@ -148,27 +154,30 @@ function SectionBlock({ s, theme }: { s: Section; theme: typeof themes[ThemeKey]
   );
 }
 
-function Kicker({ s, theme }: { s: Section; theme: typeof themes[ThemeKey] }) {
+function Kicker({ s, theme, iconStyle }: { s: Section; theme: typeof themes[ThemeKey]; iconStyle: IconStyle }) {
   const Icon = iconMap[s.icon] ?? iconMap.sparkles;
   return (
     <div className="flex items-center gap-2 text-xs font-semibold tracking-[0.2em] uppercase" style={{ color: theme.accent }}>
-      <Icon className="size-4" /> {s.kicker}
+      <span className={iconStyle === "badged" ? "grid size-8 place-items-center rounded-lg" : "contents"} style={iconStyle === "badged" ? { background: theme.accentSoft } : undefined}>
+        <Icon className={iconStyle === "minimal" ? "size-3.5 opacity-70" : "size-4"} />
+      </span>
+      {s.kicker}
     </div>
   );
 }
 
-export function NewsletterRenderer({ data, themeKey }: { data: Newsletter; themeKey: ThemeKey }) {
+export function NewsletterRenderer({ data, themeKey, design, iconStyle }: { data: Newsletter; themeKey: ThemeKey; design: DesignKey; iconStyle: IconStyle }) {
   const theme = themes[themeKey];
   return (
     <div className={`min-h-full rounded-3xl p-6 md:p-10 ${theme.bg}`}>
-      <div className="mx-auto max-w-3xl space-y-6">
+      <div className={`mx-auto max-w-4xl ${design === "compact" ? "space-y-3" : design === "cards" ? "grid gap-5 md:grid-cols-2" : "space-y-6"}`}>
         <div className={`flex items-center justify-between text-xs uppercase tracking-[0.25em] ${theme.muted}`}>
           <span>{data.issue}</span>
           <span>{data.subtitle}</span>
         </div>
-        <h1 className={`text-3xl md:text-4xl font-black tracking-tight ${theme.text}`}>{data.title}</h1>
-        {data.sections.map((s) => <SectionBlock key={s.id} s={s} theme={theme} />)}
-        <footer className={`text-center text-xs ${theme.muted} pt-4`}>{data.footer}</footer>
+        <h1 className={`text-3xl md:text-4xl font-black tracking-tight ${theme.text} ${design === "cards" ? "md:col-span-2" : ""}`}>{data.title}</h1>
+        {data.sections.map((s, index) => <div key={s.id} className={design === "cards" && (index === 0 || s.layout === "contact") ? "md:col-span-2" : ""}><SectionBlock s={s} theme={theme} design={design} iconStyle={iconStyle} /></div>)}
+        <footer className={`text-center text-xs ${theme.muted} pt-4 ${design === "cards" ? "md:col-span-2" : ""}`}>{data.footer}</footer>
       </div>
     </div>
   );
