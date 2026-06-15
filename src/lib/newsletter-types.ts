@@ -51,7 +51,7 @@ export const iconMap = {
 
 export type ThemeKey = "midnight" | "sunrise" | "forest" | "mono" | "custom";
 export type DesignKey = "editorial" | "cards" | "compact";
-export type IconStyle = "suggested" | "badged" | "minimal";
+export type IconStyle = "suggested" | "badged" | "minimal" | "dimensional";
 
 export const designs: Record<DesignKey, { name: string; description: string }> = {
   editorial: { name: "Editorial", description: "Spacious magazine flow" },
@@ -63,6 +63,7 @@ export const iconStyles: Record<IconStyle, { name: string; description: string }
   suggested: { name: "Smart", description: "AI picks contextual icons" },
   badged: { name: "Badged", description: "Icons in accent badges" },
   minimal: { name: "Minimal", description: "Subtle line icons" },
+  dimensional: { name: "3D", description: "Layered dimensional icons" },
 };
 
 export const themes: Record<

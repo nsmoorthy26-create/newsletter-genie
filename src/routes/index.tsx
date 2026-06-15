@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import {
   Badge,
+  Box,
   LayoutGrid,
   Loader2,
   Minus,
@@ -25,7 +26,7 @@ import {
 } from "@/lib/newsletter-types";
 
 const designIcons = { editorial: Newspaper, cards: LayoutGrid, compact: Rows3 };
-const styleIcons = { suggested: WandSparkles, badged: Badge, minimal: Minus };
+const styleIcons = { suggested: WandSparkles, badged: Badge, minimal: Minus, dimensional: Box };
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -172,7 +173,7 @@ function Index() {
             <p className="mb-3 text-xs text-muted-foreground">
               Changes the newsletter composition.
             </p>
-            <div className="grid grid-cols-3 gap-2">
+            <div className="grid grid-cols-2 gap-2">
               {(Object.keys(designs) as DesignKey[]).map((key) => {
                 const Icon = designIcons[key];
                 return (
@@ -207,8 +208,11 @@ function Index() {
                     onClick={() => setIconStyle(key)}
                     className="h-auto flex-col gap-1.5 px-2 py-3"
                   >
-                    <Icon className="size-4" />
-                    <span className="text-xs">{iconStyles[key].name}</span>
+                    <Icon className={key === "dimensional" ? "size-5 drop-shadow-md" : "size-4"} />
+                    <span className="text-xs font-semibold">{iconStyles[key].name}</span>
+                    <span className="text-[10px] font-normal opacity-70">
+                      {iconStyles[key].description}
+                    </span>
                   </Button>
                 );
               })}
