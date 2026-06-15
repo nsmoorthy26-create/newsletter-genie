@@ -86,7 +86,10 @@ function Index() {
             <p className="text-xs text-muted-foreground mb-2">Drop in raw text — headings, bullets, anything.</p>
             <Textarea
               value={content}
-              onChange={(e) => setContent(e.target.value)}
+              onChange={(e) => {
+                setContent(e.target.value);
+                setData(null);
+              }}
               rows={16}
               placeholder="Paste only the content you want included in the newsletter…"
               className="min-h-80 font-mono leading-relaxed"

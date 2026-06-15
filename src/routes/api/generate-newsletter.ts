@@ -36,7 +36,7 @@ Layout guidelines:
 - Use "checklist" for safety/security tips.
 - Use "hero" for the very first section only.
 - Keep body text concise and punchy.
-- 6-9 sections total.`;
+- Create only as many sections as the supplied content supports.`;
 
 const inputSchema = z.object({
   content: z.string().trim().min(1).max(30_000),
@@ -72,11 +72,10 @@ const newsletterSchema = z.object({
 function createLocalNewsletter(content: string) {
   const blocks = content.split(/\n\s*\n/).map((block) => block.trim()).filter(Boolean);
   const title = blocks[0]?.split("\n")[0] || "";
-  const sectionBlocks = blocks.length > 1 ? blocks.slice(1) : blocks;
-  const sections = sectionBlocks.slice(0, 9).map((block, index) => {
+  const sections = blocks.slice(0, 9).map((block, index) => {
     const lines = block.split("\n").map((line) => line.trim()).filter(Boolean);
-    const heading = lines[0] || `Update ${index + 1}`;
-    const details = lines.slice(1);
+    const heading = index === 0 ? lines[1] || lines[0] || "" : lines[0] || "";
+    const details = index === 0 ? lines.slice(2) : lines.slice(1);
     const isSecurity = /security|fraud|safe|password|otp/i.test(heading);
     const isContact = /contact/i.test(heading);
     return {
