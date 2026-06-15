@@ -166,8 +166,22 @@ function Kicker({ s, theme, iconStyle }: { s: Section; theme: typeof themes[Them
   );
 }
 
-export function NewsletterRenderer({ data, themeKey, design, iconStyle }: { data: Newsletter; themeKey: ThemeKey; design: DesignKey; iconStyle: IconStyle }) {
-  const theme = themes[themeKey];
+function hexToRgba(hex: string, alpha: number) {
+  const value = hex.replace("#", "");
+  const normalized = value.length === 3 ? value.split("").map((character) => character + character).join("") : value;
+  const number = Number.parseInt(normalized, 16);
+  if (Number.isNaN(number)) return `rgba(37,99,235,${alpha})`;
+  return `rgba(${number >> 16},${(number >> 8) & 255},${number & 255},${alpha})`;
+}
+
+export function NewsletterRenderer({ data, themeKey, design, iconStyle, customColor }: { data: Newsletter; themeKey: ThemeKey; design: DesignKey; iconStyle: IconStyle; customColor?: string }) {
+  const baseTheme = themes[themeKey];
+  const theme = themeKey === "custom" && customColor ? {
+    ...baseTheme,
+    accent: customColor,
+    accentSoft: hexToRgba(customColor, 0.12),
+    pattern: `radial-gradient(circle at 100% 0%, ${hexToRgba(customColor, 0.18)}, transparent 50%)`,
+  } : baseTheme;
   return (
     <div className={`min-h-full rounded-3xl p-6 md:p-10 ${theme.bg}`}>
       <div className={`mx-auto max-w-4xl ${design === "compact" ? "space-y-3" : design === "cards" ? "grid gap-5 md:grid-cols-2" : "space-y-6"}`}>

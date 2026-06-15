@@ -30,7 +30,7 @@ export const iconMap = {
   bank: Landmark, chart: BarChart3, lock: Lock, heart: Heart,
 } satisfies Record<string, LucideIcon>;
 
-export type ThemeKey = "midnight" | "sunrise" | "forest" | "mono";
+export type ThemeKey = "midnight" | "sunrise" | "forest" | "mono" | "custom";
 export type DesignKey = "editorial" | "cards" | "compact";
 export type IconStyle = "suggested" | "badged" | "minimal";
 
@@ -70,5 +70,11 @@ export const themes: Record<ThemeKey, { name: string; bg: string; card: string; 
     bg: "bg-stone-100", card: "bg-white", text: "text-stone-900", muted: "text-stone-500",
     accent: "#111827", accentSoft: "rgba(17,24,39,0.08)", ring: "ring-stone-400",
     pattern: "repeating-linear-gradient(45deg, rgba(0,0,0,0.04) 0 2px, transparent 2px 12px)",
+  },
+  custom: {
+    name: "Custom Color",
+    bg: "bg-stone-50", card: "bg-white", text: "text-stone-900", muted: "text-stone-500",
+    accent: "#2563eb", accentSoft: "rgba(37,99,235,0.12)", ring: "ring-blue-300",
+    pattern: "radial-gradient(circle at 100% 0%, rgba(37,99,235,0.16), transparent 50%)",
   },
 };
