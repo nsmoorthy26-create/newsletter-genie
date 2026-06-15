@@ -2,13 +2,20 @@ import { createFileRoute } from "@tanstack/react-router";
 import { generateText, Output } from "ai";
 import { z } from "zod";
 
-const SYSTEM = `You are a senior editorial designer. Convert raw newsletter content into a structured JSON layout suitable for rendering as a beautifully designed newsletter with infographics.
+const SYSTEM = `You are a senior editorial designer. Arrange raw newsletter content into a structured JSON layout.
+
+STRICT CONTENT FIDELITY RULES:
+- Every visible word in title, subtitle, issue, section title, kicker, body, item labels/values/details, stats, and footer MUST be copied verbatim from the user's raw content.
+- Do not invent, summarize, rewrite, correct, expand, or add any content.
+- Do not add dates, issue labels, taglines, calls to action, captions, statistics, highlights, or footer copy unless they appear in the raw content.
+- You may only choose layout, grouping, icons, and visual hierarchy.
+- Use an empty string for optional display fields when the raw content has no matching text.
 
 Return ONLY valid JSON (no markdown fences) matching this TypeScript type:
 {
-  "title": string,              // catchy newsletter title
-  "subtitle": string,           // one-line tagline
-  "issue": string,              // e.g. "Issue 01 · June 2026"
+  "title": string,              // copied exactly from raw content
+  "subtitle": string,           // exact source text or empty
+  "issue": string,              // exact source text or empty
   "accentHex": string,          // primary accent hex color matching theme
   "sections": Array<{
     "id": string,
@@ -23,13 +30,13 @@ Return ONLY valid JSON (no markdown fences) matching this TypeScript type:
   "footer": string
 }
 
-Guidelines:
+Layout guidelines:
 - Choose icons that semantically match each section.
-- Use "stats" layout when numeric infographic helps; invent reasonable round numbers if helpful (label them as "highlight").
+- Use "stats" only when numeric data already exists in the source. Never invent numbers.
 - Use "checklist" for safety/security tips.
 - Use "hero" for the very first section only.
 - Keep body text concise and punchy.
-- 6-9 sections total.`;
+- Create only as many sections as the supplied content supports.`;
 
 const inputSchema = z.object({
   content: z.string().trim().min(1).max(30_000),
@@ -49,35 +56,68 @@ const newsletterSchema = z.object({
   subtitle: z.string(),
   issue: z.string(),
   accentHex: z.string(),
-  sections: z.array(z.object({
-    id: z.string(),
-    title: z.string(),
-    kicker: z.string(),
-    icon: z.enum(["sparkles", "shield", "trending", "users", "leaf", "award", "rocket", "phone", "bank", "chart", "lock", "heart"]),
-    layout: z.enum(["hero", "feature", "stats", "checklist", "list", "quote", "contact"]),
-    body: z.string(),
-    items: z.array(itemSchema),
-    stat: z.object({ number: z.string(), label: z.string() }).optional(),
-  })).min(1).max(12),
+  sections: z
+    .array(
+      z.object({
+        id: z.string(),
+        title: z.string(),
+        kicker: z.string(),
+        icon: z.enum([
+          "sparkles",
+          "shield",
+          "trending",
+          "users",
+          "leaf",
+          "award",
+          "rocket",
+          "phone",
+          "bank",
+          "chart",
+          "lock",
+          "heart",
+        ]),
+        layout: z.enum(["hero", "feature", "stats", "checklist", "list", "quote", "contact"]),
+        body: z.string(),
+        items: z.array(itemSchema),
+        stat: z.object({ number: z.string(), label: z.string() }).optional(),
+      }),
+    )
+    .min(1)
+    .max(12),
   footer: z.string(),
 });
 
 function createLocalNewsletter(content: string) {
-  const blocks = content.split(/\n\s*\n/).map((block) => block.trim()).filter(Boolean);
-  const title = blocks[0]?.split("\n")[0] || "Newsletter";
-  const sectionBlocks = blocks.length > 1 ? blocks.slice(1) : blocks;
-  const sections = sectionBlocks.slice(0, 9).map((block, index) => {
-    const lines = block.split("\n").map((line) => line.trim()).filter(Boolean);
-    const heading = lines[0] || `Update ${index + 1}`;
-    const details = lines.slice(1);
+  const blocks = content
+    .split(/\n\s*\n/)
+    .map((block) => block.trim())
+    .filter(Boolean);
+  const title = blocks[0]?.split("\n")[0] || "";
+  const sections = blocks.slice(0, 9).map((block, index) => {
+    const lines = block
+      .split("\n")
+      .map((line) => line.trim())
+      .filter(Boolean);
+    const heading = index === 0 ? lines[1] || lines[0] || "" : lines[0] || "";
+    const details = index === 0 ? lines.slice(2) : lines.slice(1);
     const isSecurity = /security|fraud|safe|password|otp/i.test(heading);
     const isContact = /contact/i.test(heading);
     return {
       id: `section-${index + 1}`,
       title: heading,
-      kicker: index === 0 ? "FEATURED UPDATE" : isSecurity ? "SECURITY CORNER" : isContact ? "STAY CONNECTED" : "LATEST NEWS",
-      icon: (isSecurity ? "shield" : isContact ? "phone" : index === 0 ? "sparkles" : "trending") as "shield" | "phone" | "sparkles" | "trending",
-      layout: (index === 0 ? "hero" : isSecurity ? "checklist" : isContact ? "contact" : "list") as "hero" | "checklist" | "contact" | "list",
+      kicker: heading,
+      icon: (isSecurity
+        ? "shield"
+        : isContact
+          ? "phone"
+          : index === 0
+            ? "sparkles"
+            : "trending") as "shield" | "phone" | "sparkles" | "trending",
+      layout: (index === 0 ? "hero" : isSecurity ? "checklist" : isContact ? "contact" : "list") as
+        | "hero"
+        | "checklist"
+        | "contact"
+        | "list",
       body: details.length === 1 ? details[0] : "",
       items: (details.length === 1 ? [] : details).map((line) => {
         const [label, ...value] = line.split(":");
@@ -88,11 +128,11 @@ function createLocalNewsletter(content: string) {
 
   return {
     title,
-    subtitle: "Designed locally from your content",
-    issue: new Intl.DateTimeFormat("en", { month: "long", year: "numeric" }).format(new Date()),
+    subtitle: "",
+    issue: "",
     accentHex: "#2563eb",
     sections,
-    footer: "Thank you for reading.",
+    footer: "",
   };
 }
 
@@ -101,7 +141,8 @@ export const Route = createFileRoute("/api/generate-newsletter")({
     handlers: {
       POST: async ({ request }) => {
         const parsedInput = inputSchema.safeParse(await request.json());
-        if (!parsedInput.success) return new Response("Invalid newsletter content", { status: 400 });
+        if (!parsedInput.success)
+          return new Response("Invalid newsletter content", { status: 400 });
         const { content, theme, design, iconStyle } = parsedInput.data;
         const key = process.env.LOVABLE_API_KEY;
         if (!key) {
@@ -111,7 +152,11 @@ export const Route = createFileRoute("/api/generate-newsletter")({
         }
 
         try {
-          const { createLovableAiGatewayProvider, getLovableAiGatewayResponseHeaders, getLovableAiGatewayRunId } = await import("@/lib/ai-gateway.server");
+          const {
+            createLovableAiGatewayProvider,
+            getLovableAiGatewayResponseHeaders,
+            getLovableAiGatewayRunId,
+          } = await import("@/lib/ai-gateway.server");
           const gateway = createLovableAiGatewayProvider(key, getLovableAiGatewayRunId(request));
           const result = await generateText({
             model: gateway("google/gemini-3-flash-preview"),
@@ -123,11 +168,14 @@ export const Route = createFileRoute("/api/generate-newsletter")({
             headers: getLovableAiGatewayResponseHeaders(result.response.headers),
           });
         } catch (error) {
-          const status = typeof error === "object" && error !== null && "statusCode" in error
-            ? Number(error.statusCode)
-            : 500;
-          if (status === 429) return new Response("Rate limit reached. Please retry shortly.", { status });
-          if (status === 402) return new Response("AI credits exhausted. Add credits in your workspace.", { status });
+          const status =
+            typeof error === "object" && error !== null && "statusCode" in error
+              ? Number(error.statusCode)
+              : 500;
+          if (status === 429)
+            return new Response("Rate limit reached. Please retry shortly.", { status });
+          if (status === 402)
+            return new Response("AI credits exhausted. Add credits in your workspace.", { status });
           console.error("Newsletter generation failed", error);
           return new Response("AI generation failed. Please try again.", { status: 500 });
         }

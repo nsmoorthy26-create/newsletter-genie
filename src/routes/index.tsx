@@ -1,60 +1,50 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Badge, LayoutGrid, Loader2, Minus, Newspaper, Printer, Rows3, Sparkles, WandSparkles } from "lucide-react";
+import { Textarea } from "@/components/ui/textarea";
+import {
+  Badge,
+  LayoutGrid,
+  Loader2,
+  Minus,
+  Newspaper,
+  Printer,
+  Rows3,
+  Sparkles,
+  WandSparkles,
+} from "lucide-react";
 import { NewsletterRenderer } from "@/components/NewsletterRenderer";
-import { designs, iconStyles, themes, type DesignKey, type IconStyle, type Newsletter, type ThemeKey } from "@/lib/newsletter-types";
+import {
+  designs,
+  iconStyles,
+  themes,
+  type DesignKey,
+  type IconStyle,
+  type Newsletter,
+  type ThemeKey,
+} from "@/lib/newsletter-types";
 
 const designIcons = { editorial: Newspaper, cards: LayoutGrid, compact: Rows3 };
 const styleIcons = { suggested: WandSparkles, badged: Badge, minimal: Minus };
-
-const SAMPLE = `Digital Banking Highlights
-Smarter Banking, Anytime Anywhere
-Enhanced Mobile Banking App Experience
-Faster Fund Transfers and Real-Time Notifications
-Improved Security with Multi-Factor Authentication
-Personalized Financial Insights and Spending Analytics
-
-Product Spotlight
-New Fixed Deposit Schemes
-Grow your savings with competitive interest rates and flexible tenures designed to meet your financial goals.
-
-Business Banking Solutions
-Empowering businesses with: Trade Finance Services, Working Capital Solutions, Digital Payment Collections, Supply Chain Financing.
-
-Customer Success Story
-A leading SME customer successfully expanded operations through our customized financing solutions and digital banking support.
-
-Security Corner — Stay Safe from Fraud
-Never share OTPs or passwords. Verify links before clicking. Use only official banking channels. Report suspicious activities immediately.
-
-Corporate Social Responsibility
-Financial Literacy Programs, Tree Plantation Drives, Educational Support Initiatives, Community Health Awareness Campaigns.
-
-Employee Corner — Celebrating Excellence
-Customer Service Excellence, Innovation Contributions, Operational Efficiency, Leadership Excellence.
-
-Upcoming Initiatives
-AI-Powered Customer Support, Enhanced Mobile Banking Features, New Investment Products, Digital Onboarding Improvements.
-
-Contact Us
-Customer Care: 1800-XXX-XXXX
-Email: support@bankname.com
-Website: www.bankname.com`;
 
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
       { title: "Smart Newsletter Builder" },
-      { name: "description", content: "Paste your content. AI designs a beautiful newsletter with infographics and themes." },
+      {
+        name: "description",
+        content:
+          "Paste your content. AI designs a beautiful newsletter with infographics and themes.",
+      },
     ],
   }),
   component: Index,
 });
 
 function Index() {
-  const [content, setContent] = useState(SAMPLE);
+  const [content, setContent] = useState("");
   const [themeKey, setThemeKey] = useState<ThemeKey>("midnight");
+  const [customColor, setCustomColor] = useState("#2563eb");
   const [design, setDesign] = useState<DesignKey>("editorial");
   const [iconStyle, setIconStyle] = useState<IconStyle>("suggested");
   const [loading, setLoading] = useState(false);
@@ -70,14 +60,15 @@ function Index() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           content,
-          theme: themes[themeKey].name,
+          theme: themeKey === "custom" ? `Custom ${customColor}` : themes[themeKey].name,
           design: designs[design].name,
           iconStyle: iconStyles[iconStyle].name,
         }),
       });
       if (!res.ok) {
         if (res.status === 429) throw new Error("Rate limit reached. Please retry shortly.");
-        if (res.status === 402) throw new Error("AI credits exhausted. Add credits in your workspace.");
+        if (res.status === 402)
+          throw new Error("AI credits exhausted. Add credits in your workspace.");
         throw new Error(await res.text());
       }
       const json = (await res.json()) as Newsletter;
@@ -115,12 +106,18 @@ function Index() {
         <aside className="space-y-4 print:hidden">
           <div className="rounded-2xl border bg-white p-5 shadow-sm">
             <label className="text-sm font-semibold">Newsletter content</label>
-            <p className="text-xs text-muted-foreground mb-2">Drop in raw text — headings, bullets, anything.</p>
-            <textarea
+            <p className="text-xs text-muted-foreground mb-2">
+              Drop in raw text — headings, bullets, anything.
+            </p>
+            <Textarea
               value={content}
-              onChange={(e) => setContent(e.target.value)}
+              onChange={(e) => {
+                setContent(e.target.value);
+                setData(null);
+              }}
               rows={16}
-              className="w-full rounded-lg border bg-background p-3 text-sm font-mono leading-relaxed focus:outline-none focus:ring-2 focus:ring-indigo-400"
+              placeholder="Paste only the content you want included in the newsletter…"
+              className="min-h-80 font-mono leading-relaxed"
             />
           </div>
 
@@ -131,19 +128,40 @@ function Index() {
                 const t = themes[k];
                 const active = themeKey === k;
                 return (
-                  <button
+                  <Button
                     key={k}
+                    type="button"
+                    variant="ghost"
                     onClick={() => setThemeKey(k)}
-                    className={`text-left rounded-xl border-2 p-3 transition ${active ? "border-indigo-500 ring-2 ring-indigo-200" : "border-transparent hover:border-stone-200"}`}
-                    style={{ background: t.accent + "10" }}
+                    className={`h-auto justify-start text-left rounded-xl border-2 p-3 transition ${active ? "border-primary ring-2 ring-ring" : "border-transparent hover:border-border"}`}
                   >
                     <div className="flex gap-1 mb-2">
-                      <span className="size-4 rounded" style={{ background: t.accent }} />
+                      {k === "custom" ? (
+                        <input
+                          type="color"
+                          value={customColor}
+                          aria-label="Choose custom newsletter color"
+                          onClick={(event) => event.stopPropagation()}
+                          onChange={(event) => {
+                            setCustomColor(event.target.value);
+                            setThemeKey("custom");
+                          }}
+                          className="size-6 cursor-pointer rounded border-0 bg-transparent p-0"
+                        />
+                      ) : (
+                        <span className="size-4 rounded" style={{ background: t.accent }} />
+                      )}
                       <span className="size-4 rounded bg-white border" />
-                      <span className="size-4 rounded" style={{ background: t.accent, opacity: 0.4 }} />
+                      <span
+                        className="size-4 rounded"
+                        style={{
+                          background: k === "custom" ? customColor : t.accent,
+                          opacity: 0.4,
+                        }}
+                      />
                     </div>
                     <div className="text-xs font-semibold">{t.name}</div>
-                  </button>
+                  </Button>
                 );
               })}
             </div>
@@ -151,12 +169,20 @@ function Index() {
 
           <div className="rounded-2xl border bg-white p-5 shadow-sm">
             <label className="text-sm font-semibold">Design</label>
-            <p className="mb-3 text-xs text-muted-foreground">Changes the newsletter composition.</p>
+            <p className="mb-3 text-xs text-muted-foreground">
+              Changes the newsletter composition.
+            </p>
             <div className="grid grid-cols-3 gap-2">
               {(Object.keys(designs) as DesignKey[]).map((key) => {
                 const Icon = designIcons[key];
                 return (
-                  <Button key={key} type="button" variant={design === key ? "default" : "outline"} onClick={() => setDesign(key)} className="h-auto flex-col gap-1.5 px-2 py-3">
+                  <Button
+                    key={key}
+                    type="button"
+                    variant={design === key ? "default" : "outline"}
+                    onClick={() => setDesign(key)}
+                    className="h-auto flex-col gap-1.5 px-2 py-3"
+                  >
                     <Icon className="size-4" />
                     <span className="text-xs">{designs[key].name}</span>
                   </Button>
@@ -167,12 +193,20 @@ function Index() {
 
           <div className="rounded-2xl border bg-white p-5 shadow-sm">
             <label className="text-sm font-semibold">Icon suggestion</label>
-            <p className="mb-3 text-xs text-muted-foreground">Choose how contextual icons are presented.</p>
+            <p className="mb-3 text-xs text-muted-foreground">
+              Choose how contextual icons are presented.
+            </p>
             <div className="grid grid-cols-3 gap-2">
               {(Object.keys(iconStyles) as IconStyle[]).map((key) => {
                 const Icon = styleIcons[key];
                 return (
-                  <Button key={key} type="button" variant={iconStyle === key ? "default" : "outline"} onClick={() => setIconStyle(key)} className="h-auto flex-col gap-1.5 px-2 py-3">
+                  <Button
+                    key={key}
+                    type="button"
+                    variant={iconStyle === key ? "default" : "outline"}
+                    onClick={() => setIconStyle(key)}
+                    className="h-auto flex-col gap-1.5 px-2 py-3"
+                  >
                     <Icon className="size-4" />
                     <span className="text-xs">{iconStyles[key].name}</span>
                   </Button>
@@ -181,24 +215,50 @@ function Index() {
             </div>
           </div>
 
-          <Button onClick={generate} disabled={loading || !content.trim()} className="w-full" size="lg">
-            {loading ? <><Loader2 className="size-4 animate-spin" /> Designing…</> : <><Sparkles className="size-4" /> Generate Newsletter</>}
+          <Button
+            onClick={generate}
+            disabled={loading || !content.trim()}
+            className="w-full"
+            size="lg"
+          >
+            {loading ? (
+              <>
+                <Loader2 className="size-4 animate-spin" /> Designing…
+              </>
+            ) : (
+              <>
+                <Sparkles className="size-4" /> Generate Newsletter
+              </>
+            )}
           </Button>
-          {error && <div className="text-sm text-red-600 rounded-lg bg-red-50 p-3 border border-red-200">{error}</div>}
+          {error && (
+            <div className="text-sm text-red-600 rounded-lg bg-red-50 p-3 border border-red-200">
+              {error}
+            </div>
+          )}
         </aside>
 
         <section className="min-h-[600px]">
           {data ? (
-            <NewsletterRenderer data={data} themeKey={themeKey} design={design} iconStyle={iconStyle} />
+            <NewsletterRenderer
+              data={data}
+              themeKey={themeKey}
+              design={design}
+              iconStyle={iconStyle}
+              customColor={customColor}
+            />
           ) : (
             <div className="h-full grid place-items-center rounded-3xl border-2 border-dashed bg-white/40 p-16 text-center">
               <div>
                 <div className="mx-auto grid place-items-center size-16 rounded-2xl bg-gradient-to-br from-indigo-500 to-fuchsia-500 text-white">
                   <Sparkles className="size-8" />
                 </div>
-                <h2 className="mt-4 text-xl font-bold">Your designed newsletter will appear here</h2>
+                <h2 className="mt-4 text-xl font-bold">
+                  Your designed newsletter will appear here
+                </h2>
                 <p className="mt-2 text-sm text-muted-foreground max-w-md">
-                  Paste your raw content on the left, choose a theme, and let AI design a polished layout with infographics.
+                  Paste your raw content on the left, choose a theme, and let AI design a polished
+                  layout with infographics.
                 </p>
               </div>
             </div>
